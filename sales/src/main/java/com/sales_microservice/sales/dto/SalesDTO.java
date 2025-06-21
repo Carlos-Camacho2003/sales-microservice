@@ -19,7 +19,4 @@ public class SalesDTO {
     // Constructores
     public SalesDTO() {}
 
-    // Getters y Setters
-
-    // ... (generar los demás getters y setters)
 }
