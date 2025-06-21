@@ -40,7 +40,7 @@ public class SecurityConfig {
                     http.requestMatchers(HttpMethod.GET, "/sales/get").hasAnyRole("ADMIN", "CLIENT", "DELIVERER");
                     http.requestMatchers(HttpMethod.GET, "/sales/get/{id}").hasAnyRole("ADMIN", "CLIENT", "DELIVERER");
                     http.requestMatchers(HttpMethod.GET, "/sales/email/{email}").hasAnyRole("ADMIN", "CLIENT");
-                    http.requestMatchers(HttpMethod.PATCH, "/sales/update/{id}").hasRole("ADMIN");
+                    http.requestMatchers(HttpMethod.PATCH, "/sales/update/{id}").hasAnyRole("ADMIN", "DELIVERER");
                     http.requestMatchers(HttpMethod.DELETE, "/sales/delete/{id}").hasRole("ADMIN");
 
                     http.anyRequest().authenticated();
