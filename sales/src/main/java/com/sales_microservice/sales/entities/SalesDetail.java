@@ -1,9 +1,11 @@
 package com.sales_microservice.sales.entities;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
 import java.math.BigDecimal;
 
-
+@Data
 @Entity
 @Table(name = "detail_sales")
 public class SalesDetail {
@@ -13,7 +15,7 @@ public class SalesDetail {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "orden_id")
-    private Sales orden;
+    private Sales sales;
 
     @Column(name = "producto_id")
     private Long productoId;

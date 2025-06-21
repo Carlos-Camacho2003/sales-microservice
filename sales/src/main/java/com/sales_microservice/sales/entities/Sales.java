@@ -1,10 +1,13 @@
 package com.sales_microservice.sales.entities;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Data
 @Entity
 @Table(name = "sales")
 public class Sales {
@@ -30,7 +33,7 @@ public class Sales {
     @Column(name = "estado", length = 30)
     private String estado;
 
-    @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "sales", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SalesDetail> detalles;
 
     // Constructores, getters y setters
