@@ -1,8 +1,12 @@
 package com.sales_microservice.sales.controller;
 
+import com.sales_microservice.sales.dto.OrderRequestDto;
+import com.sales_microservice.sales.dto.OrderResponseDTO;
 import com.sales_microservice.sales.dto.SalesDTO;
 import com.sales_microservice.sales.security.auth.AuthService;
 import com.sales_microservice.sales.service.ISalesService;
+import com.sales_microservice.sales.service.OrderService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,23 +21,31 @@ public class SalesController {
 
     private final ISalesService salesService;
     private final AuthService authService;
+    private final OrderService orderService;
 
     @Autowired
-    public SalesController(ISalesService salesService, AuthService authService)
+    public SalesController(ISalesService salesService,
+                           AuthService authService,
+                           OrderService orderService)
     {
         this.salesService = salesService;
         this.authService = authService;
+        this.orderService = orderService;
     }
 
     @PostMapping("/create")
-    public ResponseEntity<SalesDTO> createSales(
-            @RequestBody SalesDTO salesDTO,
+    public ResponseEntity<OrderResponseDTO> createSales(
+            @RequestBody OrderRequestDto.OrderRequestDTO orderRequest,
             @RequestHeader("Authorization") String token) {
 
         boolean isValidToken = authService.isValidToken(token);
 
-        SalesDTO createdSale = salesService.createSales(salesDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdSale);
+        if(!isValidToken){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }else {
+            OrderResponseDTO createdOrder = orderService.createOrder(orderRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
+        }
     }
 
     @GetMapping("/get")
