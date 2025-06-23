@@ -38,7 +38,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sonar
       - name: Build and analyze with SonarCloud
-        working-directory: deliveries
+        working-directory: sales
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
