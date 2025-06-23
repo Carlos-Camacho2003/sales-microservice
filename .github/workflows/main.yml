@@ -17,11 +17,12 @@ jobs:
         with:
           fetch-depth: 0  # Mejor análisis incremental en SonarQube
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: 17
-          distribution: 'zulu'  # Puedes cambiar a 'temurin' si prefieres
+          java-version: 21
+          distribution: 'temurin'  # o 'zulu' si prefieres
+
 
       - name: Cache SonarQube packages
         uses: actions/cache@v4
