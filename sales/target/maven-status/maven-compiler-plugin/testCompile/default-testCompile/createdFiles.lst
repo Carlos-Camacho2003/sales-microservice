@@ -1,0 +1,8 @@
+com\sales_microservice\unit_tests\AuthServiceTest.class
+com\sales_microservice\integration_tests\AuthServiceTest.class
+com\sales_microservice\unit_tests\ExcepcionTest.class
+com\sales_microservice\unit_tests\SalesControllerTest.class
+com\sales_microservice\integration_tests\SalesControllerTest.class
+com\sales_microservice\unit_tests\SalesMapperTest.class
+com\sales_microservice\integration_tests\SalesMapperIntegrationTest.class
+com\sales_microservice\sales\SalesApplicationTests.class

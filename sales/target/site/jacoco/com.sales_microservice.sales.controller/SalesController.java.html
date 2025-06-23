@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SalesController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sales</a> &gt; <a href="index.source.html" class="el_package">com.sales_microservice.sales.controller</a> &gt; <span class="el_source">SalesController.java</span></div><h1>SalesController.java</h1><pre class="source lang-java linenums">package com.sales_microservice.sales.controller;
+
+import com.sales_microservice.sales.dto.SalesDTO;
+import com.sales_microservice.sales.security.auth.AuthService;
+import com.sales_microservice.sales.service.ISalesService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping(&quot;/sales&quot;)
+public class SalesController {
+
+    private final ISalesService salesService;
+    private final AuthService authService;
+
+    @Autowired
+    public SalesController(ISalesService salesService, AuthService authService)
+<span class="fc" id="L23">    {</span>
+<span class="fc" id="L24">        this.salesService = salesService;</span>
+<span class="fc" id="L25">        this.authService = authService;</span>
+<span class="fc" id="L26">    }</span>
+
+    @PostMapping(&quot;/create&quot;)
+    public ResponseEntity&lt;SalesDTO&gt; createSales(
+            @RequestBody SalesDTO salesDTO,
+            @RequestHeader(&quot;Authorization&quot;) String token) {
+
+<span class="fc" id="L33">        boolean isValidToken = authService.isValidToken(token);</span>
+
+<span class="fc" id="L35">        SalesDTO createdSale = salesService.createSales(salesDTO);</span>
+<span class="fc" id="L36">        return ResponseEntity.status(HttpStatus.CREATED).body(createdSale);</span>
+    }
+
+    @GetMapping(&quot;/get&quot;)
+    public ResponseEntity&lt;List&lt;SalesDTO&gt;&gt; getAllSales(
+            @RequestHeader(&quot;Authorization&quot;) String token)
+    {
+<span class="fc" id="L43">        boolean isValidToken = authService.isValidToken(token);</span>
+
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        if(!isValidToken){</span>
+<span class="fc" id="L46">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
+        }
+        else{
+<span class="fc" id="L49">            List&lt;SalesDTO&gt; sales = salesService.getAllSales();</span>
+<span class="fc" id="L50">            return ResponseEntity.ok(sales);</span>
+        }
+
+    }
+
+    @GetMapping(&quot;/get/{id}&quot;)
+    public ResponseEntity&lt;SalesDTO&gt; getSalesById(
+            @PathVariable Long id,
+            @RequestHeader(&quot;Authorization&quot;) String token)
+    {
+<span class="fc" id="L60">        boolean isValidToken = authService.isValidToken(token);</span>
+
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        if(!isValidToken){</span>
+<span class="nc" id="L63">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
+        }else {
+<span class="fc" id="L65">            SalesDTO sale = salesService.getSalesById(id);</span>
+<span class="fc" id="L66">            return ResponseEntity.ok(sale);</span>
+        }
+
+    }
+
+    @GetMapping(&quot;/email/{email}&quot;)
+    public ResponseEntity&lt;List&lt;SalesDTO&gt;&gt; getSalesByCustomerEmail(@PathVariable String email) {
+<span class="fc" id="L73">        List&lt;SalesDTO&gt; sales = salesService.getSalesByCustomerEmail(email);</span>
+<span class="fc" id="L74">        return ResponseEntity.ok(sales);</span>
+    }
+
+    @PatchMapping(&quot;/update/{id}&quot;)
+    public ResponseEntity&lt;SalesDTO&gt; updateSalesStatus(
+            @PathVariable Long id,
+            @RequestBody Map&lt;String, String&gt; request,
+            @RequestHeader(&quot;Authorization&quot;) String token) {
+
+<span class="fc" id="L83">        String status = request.get(&quot;status&quot;);</span>
+<span class="fc" id="L84">        boolean isValidToken = authService.isValidToken(token);</span>
+
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        if(!isValidToken){</span>
+<span class="nc" id="L87">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
+        }else{
+<span class="fc" id="L89">            SalesDTO updatedSale = salesService.updateSalesStatus(id, status);</span>
+<span class="fc" id="L90">            return ResponseEntity.ok(updatedSale);</span>
+        }
+
+    }
+
+    @DeleteMapping(&quot;/delete/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; cancelSales(
+            @PathVariable Long id,
+            @RequestHeader(&quot;Authorization&quot;) String token) {
+
+<span class="fc" id="L100">        boolean isValidToken = authService.isValidToken(token);</span>
+
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        if(!isValidToken){</span>
+<span class="nc" id="L103">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
+        }else{
+<span class="fc" id="L105">            salesService.cancelSales(id);</span>
+<span class="fc" id="L106">            return ResponseEntity.noContent().build();</span>
+        }
+
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

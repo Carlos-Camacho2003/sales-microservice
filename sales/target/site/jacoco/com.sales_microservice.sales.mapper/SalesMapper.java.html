@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SalesMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sales</a> &gt; <a href="index.source.html" class="el_package">com.sales_microservice.sales.mapper</a> &gt; <span class="el_source">SalesMapper.java</span></div><h1>SalesMapper.java</h1><pre class="source lang-java linenums">package com.sales_microservice.sales.mapper;
+
+import com.sales_microservice.sales.dto.SalesDTO;
+import com.sales_microservice.sales.dto.SalesDetailDTO;
+import com.sales_microservice.sales.entities.Sales;
+import com.sales_microservice.sales.entities.SalesDetail;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Component
+<span class="fc" id="L13">public class SalesMapper {</span>
+
+    public SalesDTO toDto(Sales sales) {
+<span class="fc" id="L16">        SalesDTO dto = new SalesDTO();</span>
+<span class="fc" id="L17">        dto.setId(sales.getId());</span>
+<span class="fc" id="L18">        dto.setClienteNombre(sales.getClienteNombre());</span>
+<span class="fc" id="L19">        dto.setClienteEmail(sales.getClienteEmail());</span>
+<span class="fc" id="L20">        dto.setFecha(sales.getFecha());</span>
+<span class="fc" id="L21">        dto.setTotal(sales.getTotal());</span>
+<span class="fc" id="L22">        dto.setMetodoPago(sales.getMetodoPago());</span>
+<span class="fc" id="L23">        dto.setEstado(sales.getEstado());</span>
+
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (sales.getDetalles() != null) {</span>
+<span class="fc" id="L26">            List&lt;SalesDetailDTO&gt; detallesDTO = sales.getDetalles().stream()</span>
+<span class="fc" id="L27">                    .map(this::toDetailDto)</span>
+<span class="fc" id="L28">                    .collect(Collectors.toList());</span>
+<span class="fc" id="L29">            dto.setDetalles(detallesDTO);</span>
+        }
+
+<span class="fc" id="L32">        return dto;</span>
+    }
+
+    public SalesDetailDTO toDetailDto(SalesDetail detail) {
+<span class="fc" id="L36">        SalesDetailDTO dto = new SalesDetailDTO();</span>
+<span class="fc" id="L37">        dto.setId(detail.getId());</span>
+<span class="fc" id="L38">        dto.setProductoId(detail.getProductoId());</span>
+<span class="fc" id="L39">        dto.setProductoNombre(detail.getProductoNombre());</span>
+<span class="fc" id="L40">        dto.setCantidad(detail.getCantidad());</span>
+<span class="fc" id="L41">        dto.setPrecioUnitario(detail.getPrecioUnitario());</span>
+<span class="fc" id="L42">        dto.setSubtotal(detail.getSubtotal());</span>
+<span class="fc" id="L43">        return dto;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
