@@ -74,3 +74,9 @@ jobs:
           docker tag $IMAGE_NAME ${{ secrets.DOCKER_USERNAME }}/sales-microservice:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/sales-microservice:latest
 
+
+      - name: Tag as latest and push
+        run: |
+          docker tag $IMAGE_NAME ${{ secrets.DOCKER_USERNAME }}/sales-microservice:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/sales-microservice:latest
+
