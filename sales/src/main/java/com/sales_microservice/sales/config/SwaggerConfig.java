@@ -15,7 +15,7 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
-        //holaaa 2
+        //holaaa 3
         return new OpenAPI()
                 .info(new Info()
                         .title("Microservicio de Ventas")
