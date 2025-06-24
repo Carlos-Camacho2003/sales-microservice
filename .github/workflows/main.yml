@@ -64,13 +64,15 @@ jobs:
       - name: Build Docker image
         working-directory: sales
         run: |
-          docker build \
+          docker buildx build \
             --tag $IMAGE_NAME \
             --file Dockerfile \
+            --load \
             .
-          
+
       - name: Push Docker image
-        run: docker push $IMAGE_NAME
+        run: |
+          docker push $IMAGE_NAME
 
       - name: Tag as latest and push
         run: |
