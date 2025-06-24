@@ -15,6 +15,9 @@ public class OrderRequestDto {
     public static class OrderRequestDTO {
         private String userEmail;
         private String metodoPago;
+        private String deliveryAddress; // Nuevo campo
+        private String city;            // Nuevo campo
+        private String contactPhone;    // Nuevo campo
         private List<OrderItemRequestDTO> items = new ArrayList<>();
 
         @Data

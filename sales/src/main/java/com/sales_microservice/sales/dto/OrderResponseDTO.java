@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Data
 public class OrderResponseDTO {
-    private Long id;
+    private UUID id;
     private UUID userId;
     private String clienteNombre;
     private String clienteEmail;

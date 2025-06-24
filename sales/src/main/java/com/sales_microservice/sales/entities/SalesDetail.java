@@ -14,7 +14,7 @@ public class SalesDetail {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "orden_id")
+    @JoinColumn(name = "orden_id", nullable = false)
     private Sales sales;
 
     @Column(name = "producto_id")

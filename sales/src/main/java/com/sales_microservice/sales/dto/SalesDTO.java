@@ -4,10 +4,11 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class SalesDTO {
-    private Long id;
+    private UUID id;
     private String clienteNombre;
     private String clienteEmail;
     private LocalDateTime fecha;
