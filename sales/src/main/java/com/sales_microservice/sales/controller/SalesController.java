@@ -33,14 +33,10 @@ public class SalesController {
     private final OrderService orderService;
 
     @Autowired
-<<<<<<< HEAD
-    public SalesController(ISalesService salesService, AuthService authService) {
-=======
     public SalesController(ISalesService salesService,
                            AuthService authService,
                            OrderService orderService)
     {
->>>>>>> ce5a20fd1f4057bc7d77cc0883cd0a2f5ebd8c85
         this.salesService = salesService;
         this.authService = authService;
         this.orderService = orderService;
@@ -72,22 +68,12 @@ public class SalesController {
             @RequestBody OrderRequestDto.OrderRequestDTO orderRequest,
             @RequestHeader("Authorization") String token) {
         boolean isValidToken = authService.isValidToken(token);
-<<<<<<< HEAD
-        SalesDTO createdSale = salesService.createSales(salesDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdSale);
-=======
-
-        if(!isValidToken){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }else {
             OrderResponseDTO createdOrder = orderService.createOrder(orderRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
         }
->>>>>>> ce5a20fd1f4057bc7d77cc0883cd0a2f5ebd8c85
     }
 
     @Operation(
-            summary = "Obtener todas las ventas",
             description = "Retorna una lista de todas las ventas registradas",
             security = @SecurityRequirement(name = "JWT")
     )
