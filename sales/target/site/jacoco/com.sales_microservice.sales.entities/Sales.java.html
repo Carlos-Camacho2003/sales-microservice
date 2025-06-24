@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Sales.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sales</a> &gt; <a href="index.source.html" class="el_package">com.sales_microservice.sales.entities</a> &gt; <span class="el_source">Sales.java</span></div><h1>Sales.java</h1><pre class="source lang-java linenums">package com.sales_microservice.sales.entities;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import org.hibernate.annotations.GenericGenerator;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Data
+@Entity
+@Table(name = &quot;sales&quot;)
+public class Sales {
+    @Id
+    @GeneratedValue(generator = &quot;UUID&quot;)
+    @GenericGenerator(
+            name = &quot;UUID&quot;,
+            strategy = &quot;org.hibernate.id.UUIDGenerator&quot;
+    )
+    @Column(updatable = false, nullable = false)
+    private UUID id;
+
+    private UUID userId;
+
+    @Column(name = &quot;cliente_nombre&quot;, length = 100)
+    private String clienteNombre;
+
+    @Column(name = &quot;cliente_email&quot;, length = 100)
+    private String clienteEmail;
+
+    @Column(name = &quot;fecha&quot;)
+    private LocalDateTime fecha;
+
+    @Column(name = &quot;total&quot;, precision = 10, scale = 2)
+    private BigDecimal total;
+
+    @Column(name = &quot;metodo_pago&quot;, length = 50)
+    private String metodoPago;
+
+    @Column(name = &quot;estado&quot;, length = 30)
+    private String estado;
+
+    @OneToMany(mappedBy = &quot;sales&quot;, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List&lt;SalesDetail&gt; detalles = new ArrayList&lt;&gt;();
+
+    public void addDetail(SalesDetail detail) {
+<span class="nc" id="L50">        detalles.add(detail);</span>
+<span class="nc" id="L51">        detail.setSales(this);</span>
+<span class="nc" id="L52">    }</span>
+
+    // Constructores, getters y setters
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

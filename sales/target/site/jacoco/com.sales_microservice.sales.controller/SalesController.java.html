@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SalesController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sales</a> &gt; <a href="index.source.html" class="el_package">com.sales_microservice.sales.controller</a> &gt; <span class="el_source">SalesController.java</span></div><h1>SalesController.java</h1><pre class="source lang-java linenums">package com.sales_microservice.sales.controller;
+
+import com.sales_microservice.sales.dto.OrderRequestDto;
+import com.sales_microservice.sales.dto.OrderResponseDTO;
+import com.sales_microservice.sales.dto.SalesDTO;
+import com.sales_microservice.sales.security.auth.AuthService;
+import com.sales_microservice.sales.service.ISalesService;
+import com.sales_microservice.sales.service.OrderService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Map;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = &quot;Ventas&quot;, description = &quot;Operaciones relacionadas con la gestión de ventas&quot;)
+@RestController
+@RequestMapping(&quot;/sales&quot;)
+public class SalesController {
+
+    private final ISalesService salesService;
+    private final AuthService authService;
+    private final OrderService orderService;
+
+    @Autowired
+    public SalesController(ISalesService salesService,
+                           AuthService authService,
+                           OrderService orderService)
+<span class="fc" id="L39">    {</span>
+<span class="fc" id="L40">        this.salesService = salesService;</span>
+<span class="fc" id="L41">        this.authService = authService;</span>
+<span class="fc" id="L42">        this.orderService = orderService;</span>
+<span class="fc" id="L43">    }</span>
+
+    @Operation(
+            summary = &quot;Crear una nueva venta&quot;,
+            description = &quot;Crea una nueva orden de venta&quot;,
+            security = @SecurityRequirement(name = &quot;JWT&quot;),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = &quot;Datos de la venta a crear&quot;,
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = SalesDTO.class),
+                            examples = @ExampleObject(
+                                    value = &quot;{\&quot;clienteNombre\&quot;:\&quot;Juan Pérez\&quot;,\&quot;clienteEmail\&quot;:\&quot;juan@example.com\&quot;,\&quot;metodoPago\&quot;:\&quot;Tarjeta\&quot;,\&quot;detalles\&quot;:[{\&quot;productoId\&quot;:101,\&quot;productoNombre\&quot;:\&quot;Laptop\&quot;,\&quot;cantidad\&quot;:1,\&quot;precioUnitario\&quot;:1200.00}]}&quot;
+                            )
+                    )
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;201&quot;, description = &quot;Venta creada exitosamente&quot;),
+            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Datos de entrada inválidos&quot;),
+            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;No autorizado - Token inválido o faltante&quot;),
+            @ApiResponse(responseCode = &quot;403&quot;, description = &quot;Prohibido - Rol no autorizado&quot;)
+    })
+    @PostMapping(&quot;/create&quot;)
+    public ResponseEntity&lt;OrderResponseDTO&gt; createSales(
+            @RequestBody OrderRequestDto.OrderRequestDTO orderRequest,
+            @RequestHeader(&quot;Authorization&quot;) String token) {
+<span class="nc" id="L70">        boolean isValidToken = authService.isValidToken(token);</span>
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if(!isValidToken){</span>
+<span class="nc" id="L73">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
+        }else {
+<span class="nc" id="L75">            OrderResponseDTO createdOrder = orderService.createOrder(orderRequest);</span>
+<span class="nc" id="L76">            return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);</span>
+        }
+    }
+
+    @Operation(
+            summary = &quot;Obtener todas las ventas&quot;,
+            description = &quot;Retorna una lista de todas las ventas registradas&quot;,
+            security = @SecurityRequirement(name = &quot;JWT&quot;)
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Lista de ventas obtenida exitosamente&quot;),
+            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;No autorizado - Token inválido o faltante&quot;),
+            @ApiResponse(responseCode = &quot;403&quot;, description = &quot;Prohibido - Rol no autorizado&quot;)
+    })
+    @GetMapping(&quot;/get&quot;)
+    public ResponseEntity&lt;List&lt;SalesDTO&gt;&gt; getAllSales(
+            @RequestHeader(&quot;Authorization&quot;) String token) {
+<span class="fc" id="L93">        boolean isValidToken = authService.isValidToken(token);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if(!isValidToken) {</span>
+<span class="fc" id="L95">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
+        } else {
+<span class="fc" id="L97">            List&lt;SalesDTO&gt; sales = salesService.getAllSales();</span>
+<span class="fc" id="L98">            return ResponseEntity.ok(sales);</span>
+        }
+    }
+
+    @Operation(
+            summary = &quot;Obtener venta por ID&quot;,
+            description = &quot;Retorna una venta específica según su ID&quot;,
+            security = @SecurityRequirement(name = &quot;JWT&quot;),
+            parameters = {
+                    @Parameter(name = &quot;id&quot;, description = &quot;ID de la venta&quot;, required = true, example = &quot;1&quot;)
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Venta encontrada&quot;),
+            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;No autorizado - Token inválido o faltante&quot;),
+            @ApiResponse(responseCode = &quot;403&quot;, description = &quot;Prohibido - Rol no autorizado&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Venta no encontrada&quot;)
+    })
+    @GetMapping(&quot;/get/{id}&quot;)
+    public ResponseEntity&lt;SalesDTO&gt; getSalesById(
+            @PathVariable Long id,
+            @RequestHeader(&quot;Authorization&quot;) String token) {
+<span class="fc" id="L120">        boolean isValidToken = authService.isValidToken(token);</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">        if(!isValidToken) {</span>
+<span class="nc" id="L122">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
+        } else {
+<span class="fc" id="L124">            SalesDTO sale = salesService.getSalesById(id);</span>
+<span class="fc" id="L125">            return ResponseEntity.ok(sale);</span>
+        }
+    }
+
+    @Operation(
+            summary = &quot;Obtener ventas por email de cliente&quot;,
+            description = &quot;Retorna todas las ventas asociadas a un email de cliente&quot;,
+            parameters = {
+                    @Parameter(name = &quot;email&quot;, description = &quot;Email del cliente&quot;, required = true, example = &quot;cliente@example.com&quot;)
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Lista de ventas obtenida exitosamente&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;No se encontraron ventas para este email&quot;)
+    })
+    @GetMapping(&quot;/email/{email}&quot;)
+    public ResponseEntity&lt;List&lt;SalesDTO&gt;&gt; getSalesByCustomerEmail(@PathVariable String email) {
+<span class="fc" id="L142">        List&lt;SalesDTO&gt; sales = salesService.getSalesByCustomerEmail(email);</span>
+<span class="fc" id="L143">        return ResponseEntity.ok(sales);</span>
+    }
+
+    @Operation(
+            summary = &quot;Actualizar estado de una venta&quot;,
+            description = &quot;Actualiza el estado de una venta existente&quot;,
+            security = @SecurityRequirement(name = &quot;JWT&quot;),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = &quot;Nuevo estado de la venta&quot;,
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = Map.class),
+                            examples = @ExampleObject(
+                                    value = &quot;{\&quot;status\&quot;:\&quot;ENVIADO\&quot;}&quot;
+                            )
+                    )
+            ),
+            parameters = {
+                    @Parameter(name = &quot;id&quot;, description = &quot;ID de la venta a actualizar&quot;, required = true, example = &quot;1&quot;)
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Estado actualizado exitosamente&quot;),
+            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Estado inválido&quot;),
+            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;No autorizado - Token inválido o faltante&quot;),
+            @ApiResponse(responseCode = &quot;403&quot;, description = &quot;Prohibido - Rol no autorizado&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Venta no encontrada&quot;)
+    })
+    @PatchMapping(&quot;/update/{id}&quot;)
+    public ResponseEntity&lt;SalesDTO&gt; updateSalesStatus(
+            @PathVariable Long id,
+            @RequestBody Map&lt;String, String&gt; request,
+            @RequestHeader(&quot;Authorization&quot;) String token) {
+<span class="fc" id="L176">        String status = request.get(&quot;status&quot;);</span>
+<span class="fc" id="L177">        boolean isValidToken = authService.isValidToken(token);</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">        if(!isValidToken) {</span>
+<span class="nc" id="L179">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
+        } else {
+<span class="fc" id="L181">            SalesDTO updatedSale = salesService.updateSalesStatus(id, status);</span>
+<span class="fc" id="L182">            return ResponseEntity.ok(updatedSale);</span>
+        }
+    }
+
+    @Operation(
+            summary = &quot;Cancelar una venta&quot;,
+            description = &quot;Cancela una venta existente&quot;,
+            security = @SecurityRequirement(name = &quot;JWT&quot;),
+            parameters = {
+                    @Parameter(name = &quot;id&quot;, description = &quot;ID de la venta a cancelar&quot;, required = true, example = &quot;1&quot;)
+            }
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;204&quot;, description = &quot;Venta cancelada exitosamente&quot;),
+            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;No autorizado - Token inválido o faltante&quot;),
+            @ApiResponse(responseCode = &quot;403&quot;, description = &quot;Prohibido - Rol no autorizado o venta no cancelable&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Venta no encontrada&quot;)
+    })
+    @DeleteMapping(&quot;/delete/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; cancelSales(
+            @PathVariable Long id,
+            @RequestHeader(&quot;Authorization&quot;) String token) {
+<span class="fc" id="L204">        boolean isValidToken = authService.isValidToken(token);</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">        if(!isValidToken) {</span>
+<span class="nc" id="L206">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
+        } else {
+<span class="fc" id="L208">            salesService.cancelSales(id);</span>
+<span class="fc" id="L209">            return ResponseEntity.noContent().build();</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

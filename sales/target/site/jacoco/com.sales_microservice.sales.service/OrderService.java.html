@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sales</a> &gt; <a href="index.source.html" class="el_package">com.sales_microservice.sales.service</a> &gt; <span class="el_source">OrderService.java</span></div><h1>OrderService.java</h1><pre class="source lang-java linenums">package com.sales_microservice.sales.service;
+
+import com.sales_microservice.sales.dto.OrderRequestDto;
+import com.sales_microservice.sales.dto.OrderResponseDTO;
+import com.sales_microservice.sales.dto.external.DeliveryCreationRequest;
+import com.sales_microservice.sales.dto.external.UserDto;
+import com.sales_microservice.sales.dto.external.ProductDto;
+import com.sales_microservice.sales.entities.Sales;
+import com.sales_microservice.sales.entities.SalesDetail;
+import com.sales_microservice.sales.infraestructure.clients.delivery.DeliveriesServiceClient;
+import com.sales_microservice.sales.infraestructure.clients.products.ProductServiceClient;
+import com.sales_microservice.sales.infraestructure.clients.users.UserServiceClient;
+import com.sales_microservice.sales.persistence.SalesRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Service
+public class OrderService {
+
+    private final UserServiceClient userServiceClient;
+    private final ProductServiceClient productServiceClient;
+    private final SalesRepository salesRepository;
+    private final DeliveriesServiceClient deliveriesServiceClient; // Inyectar
+
+    @Autowired
+    public OrderService(UserServiceClient userServiceClient,
+                        ProductServiceClient productServiceClient,
+                        SalesRepository salesRepository,
+                        DeliveriesServiceClient deliveriesServiceClient)
+<span class="fc" id="L41">    {</span>
+<span class="fc" id="L42">        this.userServiceClient = userServiceClient;</span>
+<span class="fc" id="L43">        this.productServiceClient = productServiceClient;</span>
+<span class="fc" id="L44">        this.salesRepository = salesRepository;</span>
+<span class="fc" id="L45">        this.deliveriesServiceClient = deliveriesServiceClient;</span>
+<span class="fc" id="L46">    }</span>
+
+    @Transactional
+    public OrderResponseDTO createOrder(OrderRequestDto.OrderRequestDTO request) {
+        // 1. Obtener y validar usuario
+<span class="nc" id="L51">        UserDto user = userServiceClient.getUserByEmail(request.getUserEmail());</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (user == null) {</span>
+<span class="nc" id="L53">            throw new RuntimeException(&quot;Usuario no encontrado&quot;);</span>
+        }
+
+        // 2. Obtener TODOS los productos
+<span class="nc" id="L57">        List&lt;ProductDto&gt; allProducts = productServiceClient.getAllProducts();</span>
+
+        // 3. Extraer los IDs solicitados
+<span class="nc" id="L60">        List&lt;Long&gt; productIds = request.getItems().stream()</span>
+<span class="nc" id="L61">                .map(OrderRequestDto.OrderRequestDTO.OrderItemRequestDTO::getProductId)</span>
+<span class="nc" id="L62">                .collect(Collectors.toList());</span>
+
+        // 4. Crear mapa para búsqueda rápida
+<span class="nc" id="L65">        Map&lt;Long, ProductDto&gt; productMap = allProducts.stream()</span>
+<span class="nc" id="L66">                .collect(Collectors.toMap(ProductDto::getId, Function.identity()));</span>
+
+        // 5. Calcular total y crear detalles
+<span class="nc" id="L69">        BigDecimal total = BigDecimal.ZERO;</span>
+<span class="nc" id="L70">        List&lt;SalesDetail&gt; detalles = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        for (OrderRequestDto.OrderRequestDTO.OrderItemRequestDTO item : request.getItems()) {</span>
+<span class="nc" id="L73">            ProductDto product = productMap.get(item.getProductId());</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            if (product == null) {</span>
+<span class="nc" id="L75">                throw new RuntimeException(&quot;Producto no encontrado: &quot; + item.getProductId());</span>
+            }
+
+<span class="nc" id="L78">            BigDecimal unitPrice = BigDecimal.valueOf(product.getPrice());</span>
+<span class="nc" id="L79">            BigDecimal subtotal = unitPrice.multiply(BigDecimal.valueOf(item.getCantidad()));</span>
+<span class="nc" id="L80">            total = total.add(subtotal);</span>
+
+<span class="nc" id="L82">            SalesDetail detail = new SalesDetail();</span>
+<span class="nc" id="L83">            detail.setProductoId(product.getId());</span>
+<span class="nc" id="L84">            detail.setProductoNombre(product.getName());</span>
+<span class="nc" id="L85">            detail.setCantidad(item.getCantidad());</span>
+<span class="nc" id="L86">            detail.setPrecioUnitario(unitPrice);</span>
+<span class="nc" id="L87">            detail.setSubtotal(subtotal);</span>
+
+<span class="nc" id="L89">            detalles.add(detail);</span>
+<span class="nc" id="L90">        }</span>
+
+        // 4. Crear y guardar la orden
+<span class="nc" id="L93">        Sales sales = new Sales();</span>
+<span class="nc" id="L94">        sales.setUserId(user.getId());</span>
+<span class="nc" id="L95">        sales.setClienteNombre(user.getFirstName() + &quot; &quot; + user.getLastName());</span>
+<span class="nc" id="L96">        sales.setClienteEmail(user.getEmail());</span>
+<span class="nc" id="L97">        sales.setFecha(LocalDateTime.now());</span>
+<span class="nc" id="L98">        sales.setTotal(total);</span>
+<span class="nc" id="L99">        sales.setMetodoPago(request.getMetodoPago());</span>
+<span class="nc" id="L100">        sales.setEstado(&quot;PENDIENTE&quot;);</span>
+<span class="nc" id="L101">        sales.setDetalles(detalles);</span>
+
+        // Establecer relación bidireccional
+<span class="nc" id="L104">        detalles.forEach(detail -&gt; detail.setSales(sales));</span>
+
+<span class="nc" id="L106">        Sales savedSales = salesRepository.save(sales);</span>
+<span class="nc" id="L107">        List&lt;OrderResponseDTO.OrderItemResponseDTO&gt; itemsDTO = savedSales.getDetalles().stream()</span>
+<span class="nc" id="L108">                .map(this::convertDetailToDTO)</span>
+<span class="nc" id="L109">                .collect(Collectors.toList());</span>
+        /*
+         tira pa' que yo la pruebe
+            Se pone olorosa y me gusta cómo huele (Cómo huele)
+            Instagram privado, pa' que nadie la vele
+            Se puso bonita porque sabe que hoy se bebe
+            A portarse mal pa' sentirse bien
+            No quería fumar, pero le dio al pen (Sí)
+            Una Barbie, pero no busca un Ken (No)
+            Siempre le llego cuando dice &quot;Ven&quot;
+            Pa' portarse mal se viste bien
+            Dice la verdad y a vece' miente también
+            Apaga las notificacione' en el cel (Cel)
+            Ya tiene lo suyo, pero hoy quiere joder y
+            Yo le di por el expreso
+            Le llené el cuello de beso'
+            Le hice tiempo como un preso
+            Si la ve', no le hable' de eso, que
+            Se hace la que no me conoce (No me conoce)
+            Pero, en mi cama, se volvió un vicio como la cinco doce (Como la cinco doce)
+            Me la como entera y nadie se entera
+            Un par de amiga' (Un par de amiga')
+            Toda' solteras, siempre la velan pa' que ella siga (Siga)
+         */
+<span class="nc" id="L133">        createDeliveryRecord(savedSales.getId(), request);</span>
+
+<span class="nc" id="L135">        return convertToResponseDTO(savedSales, itemsDTO);</span>
+
+    }
+
+    private void createDeliveryRecord(UUID orderId, OrderRequestDto.OrderRequestDTO request) {
+        try {
+<span class="nc" id="L141">            System.out.println(&quot;Intentando crear delivery para orden: &quot; + orderId);</span>
+
+
+<span class="nc" id="L144">            DeliveryCreationRequest deliveryRequest = new DeliveryCreationRequest();</span>
+<span class="nc" id="L145">            deliveryRequest.setOrderId(orderId.toString());</span>
+<span class="nc" id="L146">            deliveryRequest.setDeliveryAddress(request.getDeliveryAddress());</span>
+<span class="nc" id="L147">            deliveryRequest.setCity(request.getCity());</span>
+<span class="nc" id="L148">            deliveryRequest.setContactPhone(request.getContactPhone());</span>
+
+            // Agrega log del request
+<span class="nc" id="L151">            System.out.println(&quot;Request a delivery: &quot; + deliveryRequest);</span>
+
+<span class="nc" id="L153">            deliveriesServiceClient.createDelivery(deliveryRequest);</span>
+<span class="nc" id="L154">            System.out.println(&quot;Delivery creado exitosamente&quot;);</span>
+<span class="nc" id="L155">        } catch (Exception e) {</span>
+<span class="nc" id="L156">            System.err.println(&quot;Error creando delivery: &quot; + e.getMessage());</span>
+<span class="nc" id="L157">            e.printStackTrace();</span>
+<span class="nc" id="L158">        }</span>
+<span class="nc" id="L159">    }</span>
+
+
+    private OrderResponseDTO convertToResponseDTO(Sales orderEntity, List&lt;OrderResponseDTO.OrderItemResponseDTO&gt; orderItems) {
+<span class="nc" id="L163">        OrderResponseDTO responseDTO = new OrderResponseDTO();</span>
+
+<span class="nc" id="L165">        responseDTO.setId(orderEntity.getId());</span>
+<span class="nc" id="L166">        responseDTO.setUserId(orderEntity.getUserId());</span>
+<span class="nc" id="L167">        responseDTO.setClienteNombre(orderEntity.getClienteNombre());</span>
+<span class="nc" id="L168">        responseDTO.setClienteEmail(orderEntity.getClienteEmail());</span>
+<span class="nc" id="L169">        responseDTO.setFecha(orderEntity.getFecha());</span>
+<span class="nc" id="L170">        responseDTO.setTotal(orderEntity.getTotal());</span>
+<span class="nc" id="L171">        responseDTO.setMetodoPago(orderEntity.getMetodoPago());</span>
+<span class="nc" id="L172">        responseDTO.setEstado(orderEntity.getEstado());</span>
+<span class="nc" id="L173">        responseDTO.setItems(orderItems);</span>
+
+<span class="nc" id="L175">        return responseDTO;</span>
+    }
+
+    private OrderResponseDTO.OrderItemResponseDTO convertDetailToDTO(SalesDetail detail) {
+<span class="nc" id="L179">        OrderResponseDTO.OrderItemResponseDTO itemDTO = new OrderResponseDTO.OrderItemResponseDTO();</span>
+<span class="nc" id="L180">        itemDTO.setId(detail.getId());</span>
+<span class="nc" id="L181">        itemDTO.setProductId(detail.getProductoId());</span>
+<span class="nc" id="L182">        itemDTO.setProductName(detail.getProductoNombre());</span>
+<span class="nc" id="L183">        itemDTO.setCantidad(detail.getCantidad());</span>
+<span class="nc" id="L184">        itemDTO.setUnitPrice(detail.getPrecioUnitario());</span>
+<span class="nc" id="L185">        itemDTO.setSubtotal(detail.getSubtotal());</span>
+<span class="nc" id="L186">        return itemDTO;</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

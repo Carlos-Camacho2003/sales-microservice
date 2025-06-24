@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SalesServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">sales</a> &gt; <a href="index.source.html" class="el_package">com.sales_microservice.sales.service</a> &gt; <span class="el_source">SalesServiceImpl.java</span></div><h1>SalesServiceImpl.java</h1><pre class="source lang-java linenums">package com.sales_microservice.sales.service;
+
+import com.sales_microservice.sales.dto.SalesDTO;
+import com.sales_microservice.sales.entities.Sales;
+import com.sales_microservice.sales.entities.SalesDetail;
+import com.sales_microservice.sales.entities.SalesStatus;
+import com.sales_microservice.sales.exception.InvalidSalesException;
+import com.sales_microservice.sales.exception.SalesNotFoundException;
+import com.sales_microservice.sales.mapper.SalesMapper;
+import com.sales_microservice.sales.persistence.SalesRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+public class SalesServiceImpl implements ISalesService {
+
+    private final SalesRepository salesRepository;
+    private final SalesMapper salesMapper;
+
+    @Autowired
+<span class="fc" id="L29">    public SalesServiceImpl(SalesRepository salesRepository, SalesMapper salesMapper) {</span>
+<span class="fc" id="L30">        this.salesRepository = salesRepository;</span>
+<span class="fc" id="L31">        this.salesMapper = salesMapper;</span>
+<span class="fc" id="L32">    }</span>
+
+    @Override
+    @Transactional
+    public SalesDTO createSales(SalesDTO salesDTO) {
+<span class="nc bnc" id="L37" title="All 6 branches missed.">        if (salesDTO == null || salesDTO.getDetalles() == null || salesDTO.getDetalles().isEmpty()) {</span>
+<span class="nc" id="L38">            throw new InvalidSalesException(&quot;La venta y sus detalles no pueden ser nulos&quot;);</span>
+        }
+
+        // Convertir DTO a entidad
+<span class="nc" id="L42">        Sales sales = new Sales();</span>
+<span class="nc" id="L43">        sales.setClienteNombre(salesDTO.getClienteNombre());</span>
+<span class="nc" id="L44">        sales.setClienteEmail(salesDTO.getClienteEmail());</span>
+<span class="nc" id="L45">        sales.setFecha(LocalDateTime.now());</span>
+<span class="nc" id="L46">        sales.setEstado(SalesStatus.PENDIENTE.name());</span>
+<span class="nc" id="L47">        sales.setMetodoPago(salesDTO.getMetodoPago());</span>
+
+        // Convertir y asignar detalles
+<span class="nc" id="L50">        List&lt;SalesDetail&gt; detalles = salesDTO.getDetalles().stream()</span>
+<span class="nc" id="L51">                .map(detailDTO -&gt; {</span>
+<span class="nc" id="L52">                    SalesDetail detail = new SalesDetail();</span>
+<span class="nc" id="L53">                    detail.setProductoId(detailDTO.getProductoId());</span>
+<span class="nc" id="L54">                    detail.setProductoNombre(detailDTO.getProductoNombre());</span>
+<span class="nc" id="L55">                    detail.setCantidad(detailDTO.getCantidad());</span>
+<span class="nc" id="L56">                    detail.setPrecioUnitario(detailDTO.getPrecioUnitario());</span>
+<span class="nc" id="L57">                    detail.setSales(sales); // Establecer relación bidireccional</span>
+<span class="nc" id="L58">                    return detail;</span>
+                })
+<span class="nc" id="L60">                .collect(Collectors.toList());</span>
+
+<span class="nc" id="L62">        sales.setDetalles(detalles);</span>
+
+<span class="nc" id="L64">        calculateSalesTotals(sales);</span>
+<span class="nc" id="L65">        validateProductAvailability(sales);</span>
+
+<span class="nc" id="L67">        Sales savedSales = salesRepository.save(sales);</span>
+<span class="nc" id="L68">        return salesMapper.toDto(savedSales);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SalesDTO getSalesById(Long id) {
+<span class="nc" id="L74">        Sales sales = salesRepository.findById(id)</span>
+<span class="nc" id="L75">                .orElseThrow(() -&gt; new SalesNotFoundException(&quot;Venta no encontrada con ID: &quot; + id));</span>
+<span class="nc" id="L76">        return salesMapper.toDto(sales);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;SalesDTO&gt; getAllSales() {
+<span class="nc" id="L82">        return salesRepository.findAll().stream()</span>
+<span class="nc" id="L83">                .map(salesMapper::toDto)</span>
+<span class="nc" id="L84">                .collect(Collectors.toList());</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;SalesDTO&gt; getSalesByCustomerEmail(String email) {
+<span class="nc" id="L90">        return salesRepository.findByClienteEmail(email).stream()</span>
+<span class="nc" id="L91">                .map(salesMapper::toDto)</span>
+<span class="nc" id="L92">                .collect(Collectors.toList());</span>
+    }
+
+    @Override
+    @Transactional
+    public SalesDTO updateSalesStatus(Long id, String status) {
+<span class="nc" id="L98">        Sales sales = salesRepository.findById(id)</span>
+<span class="nc" id="L99">                .orElseThrow(() -&gt; new SalesNotFoundException(&quot;Venta no encontrada con ID: &quot; + id));</span>
+
+        try {
+<span class="nc" id="L102">            SalesStatus newStatus = SalesStatus.valueOf(status.toUpperCase());</span>
+<span class="nc" id="L103">            sales.setEstado(newStatus.name());</span>
+<span class="nc" id="L104">            Sales updatedSales = salesRepository.save(sales);</span>
+<span class="nc" id="L105">            return salesMapper.toDto(updatedSales);</span>
+<span class="nc" id="L106">        } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L107">            throw new InvalidSalesException(&quot;Estado de venta no válido: &quot; + status);</span>
+        }
+    }
+
+    @Override
+    @Transactional
+    public void cancelSales(Long id) {
+<span class="nc" id="L114">        Sales sales = salesRepository.findById(id)</span>
+<span class="nc" id="L115">                .orElseThrow(() -&gt; new SalesNotFoundException(&quot;Venta no encontrada con ID: &quot; + id));</span>
+
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (sales.getEstado().equals(SalesStatus.ENVIADO.name())) {</span>
+<span class="nc" id="L118">            throw new InvalidSalesException(&quot;No se puede cancelar una venta ya enviada&quot;);</span>
+        }
+
+<span class="nc" id="L121">        sales.setEstado(SalesStatus.CANCELADO.name());</span>
+<span class="nc" id="L122">        salesRepository.save(sales);</span>
+<span class="nc" id="L123">    }</span>
+
+    private void calculateSalesTotals(Sales sales) {
+<span class="nc" id="L126">        BigDecimal total = BigDecimal.ZERO;</span>
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        for (SalesDetail detail : sales.getDetalles()) {</span>
+<span class="nc" id="L129">            BigDecimal subtotal = detail.getPrecioUnitario()</span>
+<span class="nc" id="L130">                    .multiply(BigDecimal.valueOf(detail.getCantidad()));</span>
+<span class="nc" id="L131">            detail.setSubtotal(subtotal);</span>
+<span class="nc" id="L132">            total = total.add(subtotal);</span>
+<span class="nc" id="L133">        }</span>
+
+<span class="nc" id="L135">        sales.setTotal(total);</span>
+<span class="nc" id="L136">    }</span>
+
+    private void validateProductAvailability(Sales sales) {
+<span class="nc" id="L139">        sales.getDetalles().forEach(detail -&gt; {</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">            if (detail.getCantidad() &lt;= 0) {</span>
+<span class="nc" id="L141">                throw new InvalidSalesException(</span>
+<span class="nc" id="L142">                        &quot;Cantidad inválida para el producto: &quot; + detail.getProductoNombre());</span>
+            }
+<span class="nc" id="L144">        });</span>
+<span class="nc" id="L145">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
