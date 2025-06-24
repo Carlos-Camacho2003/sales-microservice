@@ -1,4 +1,4 @@
-name: Build, Analyze and Deploy Sales Microservice
+name: Build, Analyze and Deploy sales Microservice
 
 on:
   push:
@@ -11,7 +11,7 @@ env:
   IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/sales-microservice:${{ github.sha }}
 
 jobs:
-  build-and-deploy:
+  build:
     name: Build, Analyze and Deploy
     runs-on: ubuntu-latest
 
@@ -61,9 +61,8 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker image (Dockerfile en sales/)
-        run: |
-          DOCKER_BUILDKIT=0 docker build -t $IMAGE_NAME -f sales/Dockerfile sales/
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME ./sales
 
       - name: Push Docker image
         run: docker push $IMAGE_NAME
@@ -72,5 +71,3 @@ jobs:
         run: |
           docker tag $IMAGE_NAME ${{ secrets.DOCKER_USERNAME }}/sales-microservice:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/sales-microservice:latest
-
-

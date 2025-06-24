@@ -1,6 +1,5 @@
 package com.sales_microservice.sales.security.auth;
 
-import com.sales_microservice.sales.security.auth.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
