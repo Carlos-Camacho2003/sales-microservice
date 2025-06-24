@@ -1,4 +1,4 @@
-name: Build and analyze on SonarCloud
+name: Build, Analyze and Deploy Sales Microservice
 
 on:
   push:
@@ -7,9 +7,12 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+env:
+  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/sales-microservice:${{ github.sha }}
+
 jobs:
   build:
-    name: Build and Analyze
+    name: Build, Analyze and Deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -29,6 +32,7 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-m2
+
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
@@ -36,6 +40,7 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: |
             ${{ runner.os }}-sonar
+
       - name: Build and analyze with SonarCloud
         working-directory: sales
         env:
@@ -45,4 +50,24 @@ jobs:
           -Dsonar.projectKey=Carlos-Camacho2003_sales-microservice \
           -Dsonar.organization=carlos-camacho2003 \
           -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.login=$SONAR_TOKEN 
+          -Dsonar.login=$SONAR_TOKEN
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME ./sales
+
+      - name: Push Docker image
+        run: docker push $IMAGE_NAME
+
+      - name: Tag as latest and push
+        run: |
+          docker tag $IMAGE_NAME ${{ secrets.DOCKER_USERNAME }}/sales-microservice:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/sales-microservice:latest
