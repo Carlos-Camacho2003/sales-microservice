@@ -68,12 +68,17 @@ public class SalesController {
             @RequestBody OrderRequestDto.OrderRequestDTO orderRequest,
             @RequestHeader("Authorization") String token) {
         boolean isValidToken = authService.isValidToken(token);
+
+        if(!isValidToken){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }else {
             OrderResponseDTO createdOrder = orderService.createOrder(orderRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
         }
     }
 
     @Operation(
+            summary = "Obtener todas las ventas",
             description = "Retorna una lista de todas las ventas registradas",
             security = @SecurityRequirement(name = "JWT")
     )
