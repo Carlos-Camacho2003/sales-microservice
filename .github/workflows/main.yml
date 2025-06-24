@@ -11,7 +11,7 @@ env:
   IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/sales-microservice:${{ github.sha }}
 
 jobs:
-  build:
+  build-and-deploy:
     name: Build, Analyze and Deploy
     runs-on: ubuntu-latest
 
@@ -62,8 +62,13 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker image
-        run: docker build -t $IMAGE_NAME ./sales
-
+        working-directory: sales
+        run: |
+          docker build \
+            --tag $IMAGE_NAME \
+            --file Dockerfile \
+            .
+          
       - name: Push Docker image
         run: docker push $IMAGE_NAME
 
