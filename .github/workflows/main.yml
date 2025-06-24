@@ -11,7 +11,7 @@ env:
   IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/sales-microservice:${{ github.sha }}
 
 jobs:
-  build:
+  build-and-deploy:
     name: Build, Analyze and Deploy
     runs-on: ubuntu-latest
 
@@ -61,8 +61,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker image
-        run: docker build -t $IMAGE_NAME ./sales
+      - name: Build Docker image (Traditional Builder)
+        working-directory: sales
+        run: |
+          # Solución definitiva que funciona en cualquier entorno
+          DOCKER_BUILDKIT=0 docker build -t $IMAGE_NAME .
 
       - name: Push Docker image
         run: docker push $IMAGE_NAME
