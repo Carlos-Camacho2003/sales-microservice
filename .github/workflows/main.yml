@@ -61,9 +61,15 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Debug workspace (opcional)
+        run: |
+          pwd
+          ls -la
+          ls -la sales
+
       - name: Build Docker image (Dockerfile en sales/)
         run: |
-          DOCKER_BUILDKIT=0 docker build -t $IMAGE_NAME -f sales/Dockerfile sales/
+          docker build -t $IMAGE_NAME -f ./sales/Dockerfile ./sales
 
       - name: Push Docker image
         run: docker push $IMAGE_NAME
