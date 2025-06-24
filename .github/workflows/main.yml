@@ -1,3 +1,4 @@
+
 name: Build and Deploy Sales Microservice
 
 on:
@@ -15,7 +16,6 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     environment: production
-    if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
 
     steps:
       - name: Checkout code
@@ -55,7 +55,9 @@ jobs:
 
       - name: Build Docker image
         working-directory: sales
-        run: docker build -t $IMAGE_NAME .
+        run: |
+          # Construye la imagen usando tu Dockerfile de varias etapas
+          docker build -t $IMAGE_NAME .
 
       - name: Push Docker image
         run: docker push $IMAGE_NAME
@@ -64,6 +66,5 @@ jobs:
         run: |
           docker tag $IMAGE_NAME ${{ secrets.DOCKER_USERNAME }}/sales-microservice:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/sales-microservice:latest
-
 
 
