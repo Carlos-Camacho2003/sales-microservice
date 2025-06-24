@@ -15,6 +15,7 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
+        //hola
         return new OpenAPI()
                 .info(new Info()
                         .title("Microservicio de Ventas")
@@ -24,8 +25,7 @@ public class SwaggerConfig {
                                 .name("Harrison Ineey valencia Otero")
                                 .email("harrison.valencia@correounivalle.edu.co"))
                         .license(new License()
-                                .name("Apache 2.0")
-                                .url("http://springdoc.org")))
+                                .name("Apache 2.0")))
                 .addSecurityItem(new SecurityRequirement().addList("JWT"))
                 .components(new Components()
                         .addSecuritySchemes("JWT", new SecurityScheme()
