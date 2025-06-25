@@ -1,4 +1,3 @@
-
 name: Build and analyze on SonarCloud
 
 on:
@@ -32,8 +31,9 @@ jobs:
             ${{ runner.os }}-m2
 
       - name: Build with Maven
+        working-directory: sales
         run: mvn clean package
-        
+
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
@@ -41,6 +41,7 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: |
             ${{ runner.os }}-sonar
+
       - name: Build and analyze with SonarCloud
         working-directory: sales
         env:
@@ -51,6 +52,3 @@ jobs:
           -Dsonar.organization=carlos-camacho2003 \
           -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.login=$SONAR_TOKEN 
-
-
-
